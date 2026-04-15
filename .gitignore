@@ -1,8 +1,52 @@
-# osx
+# OS / editor noise
 .DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
 
-# doxygen
+# Local Codex state
+.codex
+
+# Build trees
+/build/
+/build-*/
+/out/
+/dist/
+
+# CMake / Ninja / Make
+CMakeCache.txt
+CMakeFiles/
+CTestTestfile.cmake
+Testing/
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+Makefile
+*.ninja
+.ninja_deps
+.ninja_log
+
+# Binaries and libraries
+*.o
+*.obj
+*.a
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+
+# Logs and temp files
+*.log
+*.tmp
+
+# Doxygen / generated docs
 Doxyfile*
 doxygen_sqlite3.db
-html
-*.tmp
+/html/
+
+# Cross-compilation sysroot
+/.sysroot/

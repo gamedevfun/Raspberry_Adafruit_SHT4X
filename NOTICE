@@ -1,0 +1,24 @@
+This repository contains a Raspberry Pi/Linux C++ port derived from the
+Adafruit SHT4X library. The original upstream notice is preserved below
+verbatim in support of the upstream redistribution notice.
+
+Original upstream notice from `Adafruit_SHT4x.h`:
+
+/*!
+ *  @file Adafruit_SHT4x.h
+ *
+ *  This is a library for the SHT4x Digital Humidity & Temp Sensor
+ *
+ *  Designed specifically to work with the SHT4x Humidity & Temp Sensor
+ *  -----> https://www.adafruit.com/product/4885
+ *
+ *  These sensors use I2C to communicate, 2 pins are required to interface
+ *
+ *  Adafruit invests time and resources providing this open source code,
+ *  please support Adafruit andopen-source hardware by purchasing products
+ *  from Adafruit!
+ *
+ *  Limor Fried/Ladyada (Adafruit Industries).
+ *
+ *  BSD license, all text above must be included in any redistribution
+ */
