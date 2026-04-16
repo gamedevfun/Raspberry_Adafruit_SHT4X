@@ -25,11 +25,13 @@ public:
 
     void set_response(std::uint8_t command, std::span<const std::uint8_t> response);
     std::uint8_t last_command() const;
+    std::uint8_t last_address() const;
     std::uint32_t last_delay_ms() const;
     std::uint32_t delay_call_count() const;
     const std::vector<std::uint8_t> &command_history() const;
 
 private:
+    std::uint8_t last_address_{0};
     std::uint8_t last_command_{0};
     std::uint32_t last_delay_ms_{0};
     std::uint32_t delay_call_count_{0};

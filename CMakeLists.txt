@@ -44,6 +44,9 @@ if(SHT4X_BUILD_EXAMPLES)
 
     add_executable(sht4x_monitor examples/monitor.cpp)
     target_link_libraries(sht4x_monitor PRIVATE sht4x)
+
+    add_executable(sht4x_rpi_flow examples/rpi_flow.cpp)
+    target_link_libraries(sht4x_rpi_flow PRIVATE sht4x)
 endif()
 
 if(SHT4X_BUILD_TESTS)
@@ -72,6 +75,7 @@ if(SHT4X_BUILD_EXAMPLES)
     install(TARGETS
         sht4x_read_once
         sht4x_monitor
+        sht4x_rpi_flow
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     )
 endif()

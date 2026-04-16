@@ -4,7 +4,9 @@
 
 namespace sht4x {
 
-constexpr std::uint8_t default_address = 0x44;
+constexpr std::uint8_t address_44 = 0x44;
+constexpr std::uint8_t address_45 = 0x45;
+constexpr std::uint8_t default_address = address_44;
 
 constexpr std::uint8_t command_no_heat_high_precision = 0xFD;
 constexpr std::uint8_t command_no_heat_medium_precision = 0xF6;
@@ -37,6 +39,11 @@ enum class Heater {
 struct Measurement {
     double temperature_c{0.0};
     double humidity_percent{0.0};
+};
+
+struct MeasurementTicks {
+    std::uint16_t temperature_ticks{0};
+    std::uint16_t humidity_ticks{0};
 };
 
 }  // namespace sht4x

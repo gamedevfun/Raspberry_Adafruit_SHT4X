@@ -2,7 +2,7 @@
 
 <a href="https://www.adafruit.com/product/4885"><img src="assets/board.jpg?raw=true" width="500px"></a>
 
-Modern C++20 port of the original `adafruit/Adafruit_SHT4X` Arduino driver for Raspberry Pi and other Linux systems with `i2c-dev`.
+Modern C++20 port of the original `adafruit/Adafruit_SHT4X` Arduino driver for Raspberry Pi and other Linux systems with `i2c-dev`, intended for the SHT4x family: SHT40, SHT41, and SHT45.
 
 ## Why This Fork Exists
 
@@ -14,6 +14,7 @@ The goals of the fork are:
 - expose a Linux-friendly C++ API with a clean hardware abstraction
 - support native Linux builds and Raspberry Pi cross-compilation with CMake
 - keep attribution and licensing from the upstream Adafruit project explicit
+- align command timing and command coverage with Sensirion's embedded reference where it improves correctness
 
 ## License And Upstream Attribution
 
@@ -27,6 +28,11 @@ This repository is a derivative port of the Adafruit SHT4X library.
 
 The new Linux-specific code in this fork is distributed under the same BSD 3-Clause terms so the repository has one clear license story. This repository keeps the upstream BSD license text and the original upstream notice text together so redistribution requirements are explicit.
 
+Behavioral timing and command coverage were also checked against Sensirion's embedded I2C SHT4x reference driver. That reference is used here for parity and validation only, not as vendored source.
+
+For Raspberry Pi specific manufacturer guidance, see Sensirion's Raspberry Pi driver:
+`https://github.com/Sensirion/raspberry-pi-i2c-sht4x`
+
 ## Features
 
 - Linux `i2c-dev` backend for Raspberry Pi
@@ -34,6 +40,8 @@ The new Linux-specific code in this fork is distributed under the same BSD 3-Cla
 - C++20 static library with install rules
 - native and Raspberry Pi cross-build presets
 - example programs for serial readout and continuous measurements
+- Raspberry Pi flow example with reset, serial read, and looped measurements
+- raw measurement tick access and stateless one-shot measurement overloads
 
 ## Requirements
 
@@ -97,6 +105,11 @@ cmake --build --preset rpi-armhf-release
 
 ## Run On Raspberry Pi
 
+Supported sensor family and addresses:
+
+- SHT40, SHT41, SHT45
+- `0x44` and `0x45`
+
 Enable I2C:
 
 ```bash
@@ -110,6 +123,46 @@ cmake --preset native-debug
 cmake --build --preset native-debug
 ./build/sht4x_read_once
 ```
+
+Run the flow-style example:
+
+```bash
+./build/sht4x_rpi_flow
+```
+
+Use address `0x45` if your sensor is strapped to the alternate I2C address. For example:
+
+```cpp
+sht4x::SHT4x sensor(nullptr, sht4x::address_45);
+```
+
+## Troubleshooting
+
+- Enable I2C first:
+
+  ```bash
+  sudo raspi-config nonint do_i2c 0
+  ```
+
+- Check that the device node exists:
+
+  ```bash
+  ls -l /dev/i2c-1
+  ```
+
+- If the program only works with `sudo`, your user likely does not have I2C access yet. Add the user to the `i2c` group and log in again:
+
+  ```bash
+  sudo adduser "$USER" i2c
+  ```
+
+- If access still fails, verify group membership with:
+
+  ```bash
+  groups
+  ```
+
+- If it still only works with `sudo`, the problem is usually Linux device permissions rather than the driver code.
 
 ## Repository Layout
 
@@ -125,7 +178,7 @@ cmake --build --preset native-debug
 #include "sht4x/sht4x.hpp"
 
 int main() {
-    sht4x::SHT4x sensor;
+    sht4x::SHT4x sensor(nullptr, sht4x::address_44);
     sensor.initialize();
     const auto measurement = sensor.measure();
 }
