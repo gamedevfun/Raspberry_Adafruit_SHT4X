@@ -23,10 +23,11 @@
 
 namespace sht4x {
 
-void MockSht4xDevice::write(std::uint8_t, std::span<const std::uint8_t> bytes) {
+void MockSht4xDevice::write(std::uint8_t address, std::span<const std::uint8_t> bytes) {
     if (bytes.empty()) {
         throw std::runtime_error("mock write requires at least one command byte");
     }
+    last_address_ = address;
     last_command_ = bytes.front();
     history_.push_back(last_command_);
 }
@@ -50,6 +51,10 @@ void MockSht4xDevice::set_response(std::uint8_t command, std::span<const std::ui
 
 std::uint8_t MockSht4xDevice::last_command() const {
     return last_command_;
+}
+
+std::uint8_t MockSht4xDevice::last_address() const {
+    return last_address_;
 }
 
 std::uint32_t MockSht4xDevice::last_delay_ms() const {

@@ -9,9 +9,7 @@
 
 #include <algorithm>
 #include <array>
-#include <cmath>
 #include <stdexcept>
-#include <string>
 
 namespace sht4x {
 
@@ -34,7 +32,7 @@ void SHT4x::initialize() {
 void SHT4x::soft_reset() {
     const std::array<std::uint8_t, 1> command = {command_soft_reset};
     hardware_->write(address_, command);
-    hardware_->delay_ms(1);
+    hardware_->delay_ms(10);
 }
 
 std::uint32_t SHT4x::read_serial() {
@@ -74,9 +72,22 @@ Heater SHT4x::heater() const {
 }
 
 Measurement SHT4x::measure() {
-    const std::array<std::uint8_t, 1> command = {selected_command()};
+    return convert_ticks(measure_ticks());
+}
+
+Measurement SHT4x::measure(Precision precision, Heater heater) {
+    return convert_ticks(measure_ticks(precision, heater));
+}
+
+MeasurementTicks SHT4x::measure_ticks() {
+    return measure_ticks(precision_, heater_);
+}
+
+MeasurementTicks SHT4x::measure_ticks(Precision precision, Heater heater) {
+    const auto settings = resolve_settings(precision, heater);
+    const std::array<std::uint8_t, 1> command = {settings.command};
     hardware_->write(address_, command);
-    hardware_->delay_ms(selected_delay_ms());
+    hardware_->delay_ms(settings.delay_ms);
 
     const auto reply = hardware_->read(address_, 6);
     if (reply.size() != 6) {
@@ -86,66 +97,50 @@ Measurement SHT4x::measure() {
         throw std::runtime_error("measurement CRC mismatch");
     }
 
-    const auto temperature_ticks = static_cast<std::uint16_t>((reply[0] << 8) | reply[1]);
-    const auto humidity_ticks = static_cast<std::uint16_t>((reply[3] << 8) | reply[4]);
+    MeasurementTicks ticks;
+    ticks.temperature_ticks = static_cast<std::uint16_t>((reply[0] << 8) | reply[1]);
+    ticks.humidity_ticks = static_cast<std::uint16_t>((reply[3] << 8) | reply[4]);
+    return ticks;
+}
 
+Measurement SHT4x::convert_ticks(const MeasurementTicks &ticks) {
     Measurement measurement;
-    measurement.temperature_c = -45.0 + 175.0 * static_cast<double>(temperature_ticks) / 65535.0;
-    measurement.humidity_percent = -6.0 + 125.0 * static_cast<double>(humidity_ticks) / 65535.0;
+    measurement.temperature_c = -45.0 + 175.0 * static_cast<double>(ticks.temperature_ticks) / 65535.0;
+    measurement.humidity_percent = -6.0 + 125.0 * static_cast<double>(ticks.humidity_ticks) / 65535.0;
     measurement.humidity_percent = std::clamp(measurement.humidity_percent, 0.0, 100.0);
     return measurement;
 }
 
-std::uint8_t SHT4x::selected_command() const {
-    switch (heater_) {
+SHT4x::CommandSettings SHT4x::resolve_settings(Precision precision, Heater heater) {
+    switch (heater) {
         case Heater::high_1s:
-            return command_high_heat_1s;
+            return {command_high_heat_1s, 1100};
         case Heater::high_100ms:
-            return command_high_heat_100ms;
+            return {command_high_heat_100ms, 110};
         case Heater::medium_1s:
-            return command_medium_heat_1s;
+            return {command_medium_heat_1s, 1100};
         case Heater::medium_100ms:
-            return command_medium_heat_100ms;
+            return {command_medium_heat_100ms, 110};
         case Heater::low_1s:
-            return command_low_heat_1s;
+            return {command_low_heat_1s, 1100};
         case Heater::low_100ms:
-            return command_low_heat_100ms;
+            return {command_low_heat_100ms, 110};
         case Heater::none:
-            switch (precision_) {
+            switch (precision) {
                 case Precision::high:
-                    return command_no_heat_high_precision;
+                    return {command_no_heat_high_precision, 10};
                 case Precision::medium:
-                    return command_no_heat_medium_precision;
+                    return {command_no_heat_medium_precision, 5};
                 case Precision::low:
-                    return command_no_heat_low_precision;
+                    return {command_no_heat_low_precision, 2};
             }
     }
 
     throw std::runtime_error("invalid SHT4x mode selection");
 }
 
-std::uint32_t SHT4x::selected_delay_ms() const {
-    switch (heater_) {
-        case Heater::high_1s:
-        case Heater::medium_1s:
-        case Heater::low_1s:
-            return 1100;
-        case Heater::high_100ms:
-        case Heater::medium_100ms:
-        case Heater::low_100ms:
-            return 110;
-        case Heater::none:
-            switch (precision_) {
-                case Precision::high:
-                    return 10;
-                case Precision::medium:
-                    return 5;
-                case Precision::low:
-                    return 2;
-            }
-    }
-
-    throw std::runtime_error("invalid SHT4x delay selection");
+SHT4x::CommandSettings SHT4x::selected_settings() const {
+    return resolve_settings(precision_, heater_);
 }
 
 std::uint8_t SHT4x::crc8(const std::uint8_t *data, std::size_t length) {

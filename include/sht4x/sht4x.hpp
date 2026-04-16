@@ -22,10 +22,19 @@ public:
     Heater heater() const;
 
     Measurement measure();
+    Measurement measure(Precision precision, Heater heater = Heater::none);
+    MeasurementTicks measure_ticks();
+    MeasurementTicks measure_ticks(Precision precision, Heater heater = Heater::none);
 
 private:
-    std::uint8_t selected_command() const;
-    std::uint32_t selected_delay_ms() const;
+    struct CommandSettings {
+        std::uint8_t command{0};
+        std::uint32_t delay_ms{0};
+    };
+
+    static Measurement convert_ticks(const MeasurementTicks &ticks);
+    static CommandSettings resolve_settings(Precision precision, Heater heater);
+    CommandSettings selected_settings() const;
     static std::uint8_t crc8(const std::uint8_t *data, std::size_t length);
 
     std::uint8_t address_;
